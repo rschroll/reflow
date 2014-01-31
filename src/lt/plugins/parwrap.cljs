@@ -18,10 +18,8 @@
           line (or (aget match 2) (aget match 4))
           more (or (aget match 3) (aget match 5))]
       (if (< 0 (.-length more))
-         (do
-           (js/console.log (str line "<newline>" more))
-           (str line "\n" (_rewrap more)))
-         line))))
+        (str line "\n" (_rewrap more))
+        line))))
 
 (behavior ::rewrap
           :triggers #{:rewrap}
