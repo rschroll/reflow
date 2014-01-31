@@ -46,7 +46,7 @@
           :reaction (fn [editor width]
                       (ed/set-options editor {:parwrap-width width})))
 
-(cmd/command {:command :parwrap-rewrap
+(cmd/command {:command ::rewrap
               :desc "Rewrap paragraph"
               :exec (fn []
                       (when-let [editor (pool/last-active)]
