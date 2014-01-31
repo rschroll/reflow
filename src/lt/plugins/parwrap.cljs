@@ -2,9 +2,8 @@
   (:require [lt.object :as object]
             [lt.objs.editor :as ed]
             [lt.objs.editor.pool :as pool]
-            [lt.objs.command :as cmd]
-            [lt.objs.files :as files])
-  (:require-macros [lt.macros :refer [behavior defui]]))
+            [lt.objs.command :as cmd])
+  (:require-macros [lt.macros :refer [behavior]]))
 
 (defn rewrap [text width]
   (let [text (.replace text (js/RegExp. "\\s*\n" "g") " ")]
