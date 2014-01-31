@@ -38,7 +38,7 @@
                           (if (<= from to)
                             (ed/set-selection editor {:line from :ch 0} {:line to}))))
                       (if (ed/selection? editor)
-                        (let [width (ed/option editor :reflow-width)]
+                        (let [width (:reflow-width @editor)]
                           (ed/replace-selection editor (rewrap (ed/selection editor) width))))))
 
 (behavior ::set-width
@@ -48,7 +48,7 @@
           :type :user
           :exclusive true
           :reaction (fn [editor width]
-                      (ed/set-options editor {:reflow-width width})))
+                      (object/merge! editor {:reflow-width width})))
 
 (cmd/command {:command ::reflow
               :desc "Reflow paragraph"
