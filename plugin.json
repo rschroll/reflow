@@ -1,9 +1,9 @@
 {
-  "name": "parwrap",
+  "name": "Reflow",
   "author": "Robert Schroll",
   "version": "0.0.1",
-  "source": "https://github.com/rschroll/parwrap",
-  "desc": "Rewrap paragraphs to a fixed width",
+  "source": "https://github.com/rschroll/reflow",
+  "desc": "Reflow paragraphs to a fixed width",
   "dependencies": {},
-  "behaviors": "parwrap.behaviors"
+  "behaviors": "reflow.behaviors"
 }

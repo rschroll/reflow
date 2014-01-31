@@ -1,4 +1,4 @@
-(ns lt.plugins.parwrap
+(ns lt.plugins.reflow
   (:require [lt.object :as object]
             [lt.objs.editor :as ed]
             [lt.objs.editor.pool :as pool]
@@ -20,8 +20,8 @@
         (str line "\n" (_rewrap more width))
         line))))
 
-(behavior ::rewrap
-          :triggers #{:rewrap}
+(behavior ::reflow
+          :triggers #{:reflow}
           :reaction (fn [editor]
                       (if (ed/selection? editor)
                         (let [{:keys [from to]} (ed/selection-bounds editor)]
@@ -34,20 +34,20 @@
                           (if (<= from to)
                             (ed/set-selection editor {:line from :ch 0} {:line to}))))
                       (if (ed/selection? editor)
-                        (let [width (ed/option editor :parwrap-width)]
+                        (let [width (ed/option editor :reflow-width)]
                           (ed/replace-selection editor (rewrap (ed/selection editor) width))))))
 
-(behavior ::wrap-width
+(behavior ::set-width
           :triggers #{:object.instant}
-          :desc "Editor: paragraph wrap width"
+          :desc "Editor: Reflow wrap width"
           :params [{:label "Wrap width" :type :number}]
           :type :user
           :exclusive true
           :reaction (fn [editor width]
-                      (ed/set-options editor {:parwrap-width width})))
+                      (ed/set-options editor {:reflow-width width})))
 
-(cmd/command {:command ::rewrap
-              :desc "Rewrap paragraph"
+(cmd/command {:command ::reflow
+              :desc "Reflow paragraph"
               :exec (fn []
                       (when-let [editor (pool/last-active)]
-                        (object/raise editor :rewrap)))})
+                        (object/raise editor :reflow)))})
