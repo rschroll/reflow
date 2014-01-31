@@ -6,14 +6,19 @@ you can clone this repository into your plugins folder.
 
 Usage
 -----
-Reflow provides a new command, called *Reflow paragraph*, that is bound
-to `Ctrl`-`J` by default.  Without a selection, it acts on the current
-paragraph, with paragraphs being delimited by blank lines.  With a
-selection, it acts on all the lines that are part of the selection
-(including unselected text on those lines).  The width of the reflowed
-paragraph is set in your `user.behaviors` file:
+Reflow provides a new command called *Reflow paragraph*.  Without a
+selection, it acts on the current paragraph, with paragraphs being
+delimited by blank lines.  With a selection, it acts on all the lines
+that are part of the selection (including unselected text on those
+lines).  The width of the reflowed paragraph is set in your
+`user.behaviors` file:
 ```clojure
 {:+ {:editor [(:lt.plugins.reflow/set-width 72)]}}
+```
+You can add a key binding for the reflow command by adding to your
+`user.keymap` file:
+```clojure
+{:+ {:editor {"ctrl-j" [:lt.plugins.reflow/reflow]}}}
 ```
 
 Whitespace is maintained, except at the ends of lines.  All whitespace

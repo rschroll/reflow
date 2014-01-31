@@ -1,5 +1,4 @@
-{:+ {:app [(:lt.objs.plugins/load-js "reflow_compiled.js")
-           (:lt.objs.plugins/load-keymap "reflow.keymap")]
+{:+ {:app [(:lt.objs.plugins/load-js "reflow_compiled.js")]
      :editor [:lt.plugins.reflow/reflow
               (:lt.plugins.reflow/set-width 72)]
      }}
