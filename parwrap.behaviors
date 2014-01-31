@@ -1,3 +1,4 @@
 {:+ {:app [(:lt.objs.plugins/load-js "parwrap_compiled.js")]
-     :editor [:lt.plugins.parwrap/rewrap]
+     :editor [:lt.plugins.parwrap/rewrap
+              (:lt.plugins.parwrap/wrap-width 80)]
      }}
