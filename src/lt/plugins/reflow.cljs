@@ -27,8 +27,9 @@
           :triggers #{:reflow}
           :reaction (fn [editor]
                       (if (ed/selection? editor)
-                        (let [{:keys [from to]} (ed/selection-bounds editor)]
-                          (ed/set-selection editor {:line (:line from) :ch 0} {:line (:line to)}))
+                        (let [{:keys [from to]} (ed/selection-bounds editor)
+                              toline (if (= (:ch to) 0) (- (:line to) 1) (:line to))]
+                          (ed/set-selection editor {:line (:line from) :ch 0} {:line toline}))
                         (let [pos (ed/->cursor editor)
                               line (:line pos)
                               from (+ (or (first (filter #(= (ed/line-length editor %) 0) (range line 0 -1))) -1) 1)
