@@ -1,5 +1,5 @@
 ;; Copyright 2014 Robert Schroll
-;; This file is part of Reflow ad is distributed under the MIT license.
+;; This file is part of Reflow and is distributed under the MIT license.
 
 (ns lt.plugins.reflow
   (:require [lt.object :as object]
@@ -8,20 +8,35 @@
             [lt.objs.command :as cmd])
   (:require-macros [lt.macros :refer [behavior]]))
 
-(defn rewrap [text width]
-  (let [text (.replace text (js/RegExp. "\\s*\n" "g") " ")]
-    (_rewrap text width)))
+;; http://stackoverflow.com/questions/11976210/javas-pattern-quote-equivalent-in-clojurescript
+(defn requote [s]
+  (let [special (set ".?*+^$[]\\(){}|")
+        escfn #(if (special %) (str \\ %) %)]
+    (apply str (map escfn s))))
 
-(defn _rewrap [text width]
+(defn rewrap [text width lineComment]
+  (let [commented (and lineComment (.startsWith text lineComment))
+        quotedComment (requote lineComment)
+        ;; Remove newlines and comment symbols at the beginning of all but first lines
+        text (.replace text (js/RegExp. (str "\\s*\n(" (if commented (str quotedComment " ?") "") ")?") "g") " ")
+        ;; Remove comment symbols from first line
+        text (if commented
+               (.replace text (js/RegExp. (str "^" quotedComment " ?")) "")
+               text)]
+    (_rewrap text
+             (if commented (- width (count lineComment) 1) width)
+             (if commented (str lineComment " ") ""))))
+
+(defn _rewrap [text width lineComment]
   (if (>= width (.-length text))
-    text
+    (str lineComment text)
     (let [re (js/RegExp. (str "^((.{0," (- width 1) "}\\S)\\s+(.*)|(\\S*)\\s*(.*))"))
           match (.exec re text)
           line (or (aget match 2) (aget match 4))
           more (or (aget match 3) (aget match 5))]
       (if (< 0 (.-length more))
-        (str line "\n" (_rewrap more width))
-        line))))
+        (str lineComment line "\n" (_rewrap more width lineComment))
+        (str lineComment line)))))
 
 (behavior ::reflow
           :triggers #{:reflow}
@@ -38,8 +53,11 @@
                           (if (<= from to)
                             (ed/set-selection editor {:line from :ch 0} {:line to}))))
                       (if (ed/selection? editor)
-                        (let [width (:reflow-width @editor)]
-                          (ed/replace-selection editor (rewrap (ed/selection editor) width))))))
+                        (let [width (:reflow-width @editor)
+                              lineComment (or (.-lineComment (.getModeAt (ed/->cm-ed editor)
+                                                                         (clj->js (:from (ed/selection-bounds editor)))))
+                                              nil)]
+                          (ed/replace-selection editor (rewrap (ed/selection editor) width lineComment))))))
 
 (behavior ::set-width
           :triggers #{:object.instant}
