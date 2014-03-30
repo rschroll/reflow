@@ -16,6 +16,7 @@
 
 ;; Treat all non-ASCII characters as alphabetic.  Obviously wrong, but the right thing isn't obvious.
 (def SYMBOLS (js/RegExp. "[^A-Za-z0-9\\u0080-\\uffff]*"))
+(def ALPHA (js/RegExp. "[A-Za-z0-9\\u0080-\\uffff]"))
 
 (defn commonPrefix [text]
   (_commonPrefix (.split text "\n") nil))
@@ -62,8 +63,8 @@
                           (ed/set-selection editor {:line (:line from) :ch 0} {:line toline}))
                         (let [pos (ed/->cursor editor)
                               line (:line pos)
-                              from (+ (or (first (filter #(= (ed/line-length editor %) 0) (range line 0 -1))) -1) 1)
-                              to   (- (or (first (filter #(= (ed/line-length editor %) 0) (range line (+ (ed/last-line editor) 1))))
+                              from (+ (or (first (filter #(not (.match (ed/line editor %) ALPHA)) (range line 0 -1))) -1) 1)
+                              to   (- (or (first (filter #(not (.match (ed/line editor %) ALPHA)) (range line (+ (ed/last-line editor) 1))))
                                           (+ (ed/last-line editor) 1)) 1)]
                           (if (<= from to)
                             (ed/set-selection editor {:line from :ch 0} {:line to}))))
