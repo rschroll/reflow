@@ -16,7 +16,7 @@
 
 ;; Treat all non-ASCII characters as alphabetic.  Obviously wrong, but the right thing isn't obvious.
 (def SYMBOLS (js/RegExp. "[^A-Za-z0-9\\u0080-\\uffff]*"))
-(def ALPHA (js/RegExp. "[A-Za-z0-9\\u0080-\\uffff]"))
+(def ALPHA "[A-Za-z0-9\\u0080-\\uffff]")
 
 (defn commonPrefix [text]
   (_commonPrefix (.split text "\n") nil))
@@ -62,9 +62,17 @@
                               toline (if (= (:ch to) 0) (- (:line to) 1) (:line to))]
                           (ed/set-selection editor {:line (:line from) :ch 0} {:line toline}))
                         (let [pos (ed/->cursor editor)
+                              lineComment (or (.-lineComment (.getModeAt (ed/->cm-ed editor)
+                                                                         (clj->js pos)))
+                                              nil)
                               line (:line pos)
-                              from (+ (or (first (filter #(not (.match (ed/line editor %) ALPHA)) (range line 0 -1))) -1) 1)
-                              to   (- (or (first (filter #(not (.match (ed/line editor %) ALPHA)) (range line (+ (ed/last-line editor) 1))))
+                              ;; If current line is a comment, only included commented lines in paragraph
+                              lineRegex (if (and lineComment (.match (ed/line editor line)
+                                                                     (js/RegExp. (str "^\\s*" (requote lineComment)))))
+                                          (js/RegExp. (str "^\\s*" (requote lineComment) ".*" ALPHA))
+                                          (js/RegExp. ALPHA))
+                              from (+ (or (first (filter #(not (.match (ed/line editor %) lineRegex)) (range line 0 -1))) -1) 1)
+                              to   (- (or (first (filter #(not (.match (ed/line editor %) lineRegex)) (range line (+ (ed/last-line editor) 1))))
                                           (+ (ed/last-line editor) 1)) 1)]
                           (if (<= from to)
                             (ed/set-selection editor {:line from :ch 0} {:line to}))))
