@@ -14,29 +14,44 @@
         escfn #(if (special %) (str \\ %) %)]
     (apply str (map escfn s))))
 
-(defn rewrap [text width lineComment]
-  (let [commented (and lineComment (.startsWith text lineComment))
-        quotedComment (requote lineComment)
-        ;; Remove newlines and comment symbols at the beginning of all but first lines
-        text (.replace text (js/RegExp. (str "\\s*\n(" (if commented (str quotedComment " ?") "") ")?") "g") " ")
-        ;; Remove comment symbols from first line
-        text (if commented
-               (.replace text (js/RegExp. (str "^" quotedComment " ?")) "")
-               text)]
-    (_rewrap text
-             (if commented (- width (count lineComment) 1) width)
-             (if commented (str lineComment " ") ""))))
+;; Treat all non-ASCII characters as alphabetic.  Obviously wrong, but the right thing isn't obvious.
+(def SYMBOLS (js/RegExp. "[^A-Za-z0-9\\u0080-\\uffff]*"))
 
-(defn _rewrap [text width lineComment]
+(defn commonPrefix [text]
+  (_commonPrefix (.split text "\n") nil))
+
+(defn _commonPrefix [lines prefix]
+  (let [line (first lines)
+        lines (rest lines)
+        lprefix (first (.match line SYMBOLS))
+        prefix (if prefix
+                 ;; Take the longest substring from the beginning that's in both
+                 (.slice prefix 0 (first (filter #(= (.slice prefix 0 %) (.slice lprefix 0 %))
+                                                 (range (min (count prefix) (count lprefix)) 0 -1))))
+                 lprefix)]
+    (if (or (= prefix "") (empty? lines))
+      prefix
+      (_commonPrefix lines prefix))))
+
+(defn rewrap [text width]
+  (let [prefix (commonPrefix text)
+        qprefix (requote prefix)
+        ;; Remove newlines and prefix at the beginning of all but first line
+        text (.replace text (js/RegExp. (str "\\s*\n" qprefix) "g") " ")
+        ;; Remove prefix from first line
+        text (.replace text (js/RegExp. (str "^" qprefix)) "")]
+    (_rewrap text (- width (count prefix)) prefix)))
+
+(defn _rewrap [text width linePrefix]
   (if (>= width (.-length text))
-    (str lineComment text)
+    (str linePrefix text)
     (let [re (js/RegExp. (str "^((.{0," (- width 1) "}\\S)\\s+(.*)|(\\S*)\\s*(.*))"))
           match (.exec re text)
           line (or (aget match 2) (aget match 4))
           more (or (aget match 3) (aget match 5))]
       (if (< 0 (.-length more))
-        (str lineComment line "\n" (_rewrap more width lineComment))
-        (str lineComment line)))))
+        (str linePrefix line "\n" (_rewrap more width linePrefix))
+        (str linePrefix line)))))
 
 (behavior ::reflow
           :triggers #{:reflow}
@@ -53,11 +68,8 @@
                           (if (<= from to)
                             (ed/set-selection editor {:line from :ch 0} {:line to}))))
                       (if (ed/selection? editor)
-                        (let [width (:reflow-width @editor)
-                              lineComment (or (.-lineComment (.getModeAt (ed/->cm-ed editor)
-                                                                         (clj->js (:from (ed/selection-bounds editor)))))
-                                              nil)]
-                          (ed/replace-selection editor (rewrap (ed/selection editor) width lineComment))))))
+                        (let [width (:reflow-width @editor)]
+                          (ed/replace-selection editor (rewrap (ed/selection editor) width))))))
 
 (behavior ::set-width
           :triggers #{:object.instant}
