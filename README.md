@@ -1,7 +1,7 @@
 Reflow
 ======
 Reflow is a Light Table plugin that allows you to reflow paragraphs to a
-fixed with.  It is available in the Light Table plugin repository, or
+fixed width.  It is available in the Light Table plugin repository, or
 you can clone this repository into your plugins folder.
 
 Usage
